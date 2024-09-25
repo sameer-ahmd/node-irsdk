@@ -47,9 +47,10 @@ Local<Value> NodeIrSdk::convertTelemetryVarToObject(IRSDKWrapper::TelemetryVar &
   if (var.header->count > 1)
   {
     Local<Array> arr = Nan::New<Array>(var.header->count);
+    v8::Local<v8::Context> context = Nan::GetCurrentContext(); // Get the current context
     for (int i = 0; i < var.header->count; ++i)
     {
-      arr->Set(i, convertTelemetryValueToObject(var, i));
+      arr->Set(context, i, convertTelemetryValueToObject(var, i)).FromJust(); // Update the Set method to include the context
     }
     return arr;
   }
@@ -61,6 +62,8 @@ Local<Value> NodeIrSdk::convertTelemetryVarToObject(IRSDKWrapper::TelemetryVar &
 
 void NodeIrSdk::convertVarHeaderToObject(IRSDKWrapper::TelemetryVar &var, Local<Object> &obj)
 {
+  v8::Local<v8::Context> context = Nan::GetCurrentContext(); // Get the current context
+  
   Nan::Set(obj, Nan::New("name").ToLocalChecked(), Nan::New(var.header->name).ToLocalChecked());
   Nan::Set(obj, Nan::New("desc").ToLocalChecked(), Nan::New(var.header->desc).ToLocalChecked());
   Nan::Set(obj, Nan::New("unit").ToLocalChecked(), Nan::New(var.header->unit).ToLocalChecked());
@@ -114,19 +117,20 @@ Local<Value> NodeIrSdk::getMaskedValues(const int &val, char *unit)
   {
     return getValueArr(val, CAR_BESIDE);
   }
-  cerr << "Missing converter for bitField: " << unit << endl;
+  // cerr << "Missing converter for bitField: " << unit << endl;
   return Nan::New(static_cast<int32_t>(val));
 }
 
 Local<Array> NodeIrSdk::getValueArr(const int &val, const std::vector<NodeIrSdk::MaskName> MASKS)
 {
   Local<Array> arr = Nan::New<Array>();
+  v8::Local<v8::Context> context = Nan::GetCurrentContext(); // Get the current context
   int counter = 0;
   for (const auto &mask : MASKS)
   {
     if ((mask.val & val) == mask.val)
     {
-      Nan::Set(arr, counter++, Nan::New(mask.name).ToLocalChecked());
+      arr->Set(context, counter++, Nan::New(mask.name).ToLocalChecked()).FromJust(); // Update the Set method to include the context
     }
   }
   return arr;

@@ -26,7 +26,7 @@ namespace NodeIrSdk {
   void getTelemetry(const Nan::FunctionCallbackInfo<v8::Value>& args);
 
   void getTelemetryDescription(const Nan::FunctionCallbackInfo<v8::Value>& args);
-  
+
   NAN_METHOD(sendCmd);
 
   static void cleanUp(void* arg);
@@ -36,7 +36,12 @@ namespace NodeIrSdk {
   {
     irsdk.startup();
 
-    node::AtExit(cleanUp);
+    // Use node::AddEnvironmentCleanupHook for Node.js 14 and later
+#if NODE_MAJOR_VERSION >= 14
+    node::AddEnvironmentCleanupHook(v8::Isolate::GetCurrent(), cleanUp, nullptr);
+#else
+    node::AtExit(cleanUp);  // Fallback for older Node.js versions
+#endif
 
     NAN_EXPORT(target, start);
     NAN_EXPORT(target, shutdown);
